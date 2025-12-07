@@ -7,6 +7,7 @@ import com.dlut.blockchain.service.PostService;
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -138,9 +139,9 @@ public class PostController {
     @PostMapping
     // @PreAuthorize("hasAnyRole('USER', 'ADMIN')") // 移除权限注解 - 隐藏入口访问
     @Operation(summary = "创建文章", description = "创建新的博客文章（隐藏入口访问）")
-    public ResponseEntity<PostDto> createPost(@Valid @RequestBody PostDto postDto) {
+    public ResponseEntity<PostDto> createPost(@RequestBody PostDto postDto, HttpSession session) {
         log.info("创建文章请求: {}", postDto.getTitle());
-        PostDto createdPost = postService.createPost(postDto);
+        PostDto createdPost = postService.createPost(postDto,session);
         return ResponseEntity.ok(createdPost);
     }
 

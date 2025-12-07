@@ -6,6 +6,7 @@ import com.dlut.blockchain.repository.MemberRepository;
 import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -128,6 +130,7 @@ public class MemberService {
     public MemberDto updateMember(Long id, MemberDto memberDto) {
         Member member = memberRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("成员不存在"));
+        log.debug("hahahaha{}", member);
 
         // 如果学号发生变化，检查新学号是否已存在
         if (!member.getStudentId().equals(memberDto.getStudentId())) {
@@ -137,8 +140,9 @@ public class MemberService {
         }
 
         updateEntityFromDto(member, memberDto);
+        log.info("member的年级是{}",member.getGrade());
         Member updatedMember = memberRepository.save(member);
-        log.info("更新成员成功: {} - {}", updatedMember.getStudentId(), updatedMember.getName());
+        log.debug("更新的曼巴是{}",updatedMember);
         return convertToDto(updatedMember);
     }
 
@@ -233,22 +237,22 @@ public class MemberService {
      * 更新实体
      */
     private void updateEntityFromDto(Member member, MemberDto dto) {
-        member.setStudentId(dto.getStudentId());
-        member.setName(dto.getName());
-        member.setGender(dto.getGender());
-        member.setGrade(String.valueOf(dto.getGrade()));
-        member.setMajor(dto.getMajor());
-        member.setRole(dto.getRole());
-        member.setEmail(dto.getEmail());
-        member.setPhone(dto.getPhone());
-        member.setResearchDirection(dto.getResearchDirection());
-        member.setBio(dto.getBio());
-        member.setAvatarUrl(dto.getAvatarUrl());
-        member.setStatus(dto.getStatus());
-        member.setFeatured(dto.getFeatured());
-        member.setDisplayOrder(dto.getDisplayOrder());
-        member.setGithubUrl(dto.getGithubUrl());
-        member.setLinkedinUrl(dto.getLinkedinUrl());
-        member.setPersonalWebsite(dto.getPersonalWebsite());
+        member.setStudentId(Objects.isNull(dto.getStudentId()) ? member.getStudentId() : dto.getStudentId());
+        member.setName(Objects.isNull(dto.getName()) ? member.getName() : dto.getName());
+        member.setGender(Objects.isNull(dto.getGender()) ? member.getGender() : dto.getGender());
+        member.setGrade(StringUtils.isNotBlank(dto.getGrade()) ? dto.getGrade() : member.getGrade());
+        member.setMajor(Objects.isNull(dto.getMajor()) ? member.getMajor() : dto.getMajor());
+        member.setRole(Objects.isNull(dto.getRole()) ? member.getRole() : dto.getRole());
+        member.setEmail(Objects.isNull(dto.getEmail()) ? member.getEmail() : dto.getEmail());
+        member.setPhone(Objects.isNull(dto.getPhone()) ? member.getPhone() : dto.getPhone());
+        member.setResearchDirection(Objects.isNull(dto.getResearchDirection())? member.getResearchDirection():dto.getResearchDirection());
+        member.setBio(Objects.isNull(dto.getBio()) ? member.getBio() : dto.getBio());
+        member.setAvatarUrl(Objects.isNull(dto.getAvatarUrl()) ? member.getAvatarUrl() : dto.getAvatarUrl());
+        member.setStatus(Objects.isNull(dto.getStatus()) ? member.getStatus(): dto.getStatus());
+        member.setFeatured(Objects.isNull(dto.getFeatured()) ? member.getFeatured() : dto.getFeatured());
+        member.setDisplayOrder(Objects.isNull(dto.getDisplayOrder()) ? member.getDisplayOrder() : dto.getDisplayOrder());
+        member.setGithubUrl(Objects.isNull(dto.getGithubUrl()) ? member.getGithubUrl() : dto.getGithubUrl());
+        member.setLinkedinUrl(Objects.isNull(dto.getLinkedinUrl()) ? member.getLinkedinUrl() : dto.getLinkedinUrl());
+        member.setPersonalWebsite(Objects.isNull(dto.getPersonalWebsite()) ? member.getPersonalWebsite(): dto.getPersonalWebsite());
     }
 }

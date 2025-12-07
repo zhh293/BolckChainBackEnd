@@ -28,13 +28,13 @@ public class PostDto {
     @Size(max = 200, message = "文章封面图片URL长度不能超过200个字符")
     private String coverImage;
     
-    @NotNull(message = "文章状态不能为空")
+
     private Post.PostStatus status;
     
-    @NotNull(message = "是否允许评论不能为空")
+
     private Boolean allowComments;
     
-    @NotNull(message = "是否特色文章不能为空")
+
     private Boolean featured;
     
     @Size(max = 500, message = "标签长度不能超过500个字符")

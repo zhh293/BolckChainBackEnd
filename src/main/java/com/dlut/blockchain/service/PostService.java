@@ -6,6 +6,7 @@ import com.dlut.blockchain.entity.User;
 import com.dlut.blockchain.repository.PostRepository;
 import com.dlut.blockchain.repository.UserRepository;
 import io.micrometer.core.annotation.Timed;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -142,9 +143,9 @@ public class PostService {
     @Timed(value = "service.posts.create", description = "Time taken to create a post")
     @Transactional
 //    @CacheEvict(value = "posts", allEntries = true)
-    public PostDto createPost(PostDto postDto) {
+    public PostDto createPost(PostDto postDto, HttpSession session) {
         User author = getCurrentUser();
-        
+        String adminUsername = (String)session.getAttribute("admin_username");
         Post post = convertToEntity(postDto);
         post.setAuthorId(author.getId());
         post.setViewCount(0);

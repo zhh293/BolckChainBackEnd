@@ -45,9 +45,10 @@ public class AuthService {
                 log.warn("管理员验证失败 - 用户状态异常: {} - {}", username, user.getStatus());
                 return false;
             }
+
             
             // 验证密码
-            boolean passwordValid = passwordEncoder.matches(password, user.getPassword());
+            boolean passwordValid = passwordEncoder.matches(user.getPassword(), password);
             if (!passwordValid) {
                 log.warn("管理员验证失败 - 密码错误: {}", username);
                 return false;

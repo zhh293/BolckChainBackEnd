@@ -43,7 +43,7 @@ public class SecurityConfig {
 
             @Override
             public boolean matches(CharSequence charSequence, String s) {
-                return true;
+                return charSequence.toString().equals(s);
             }
         };
     }
