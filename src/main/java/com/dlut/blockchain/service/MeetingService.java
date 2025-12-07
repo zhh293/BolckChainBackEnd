@@ -16,10 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -193,7 +190,12 @@ public class MeetingService {
         meeting.setLocation(meetingDto.getLocation());
         meeting.setType(meetingDto.getMeetingType());
         meeting.setAttendees(String.join(",", meetingDto.getAttendees()));
-        meeting.setAbsentees(String.join(",", meetingDto.getAbsentees()));
+//        meeting.setAbsentees(String.join(",", meetingDto.getAbsentees()));
+        //用optional判空
+        List<String> absentees = meetingDto.getAbsentees();
+        if(meetingDto.getAbsentees() != null && !absentees.isEmpty()) {
+            meeting.setAbsentees(String.join(",", absentees));
+        }
         meeting.setMinutes(meetingDto.getMeetingNotes());
         meeting.setConclusion(meetingDto.getConclusion());
         meeting.setActionItems(meetingDto.getActionItems());
@@ -383,7 +385,7 @@ public class MeetingService {
         meeting.setActionItems(dto.getActionItems());
         meeting.setTags(dto.getTags());
         meeting.setDisplayOrder(dto.getDisplayOrder());
-        meeting.setCreatedBy(Long.parseLong(dto.getCreatedBy()));
+        meeting.setCreatedBy(Objects.isNull(dto.getCreatedBy())?null:Long.parseLong(dto.getCreatedBy()));
         return meeting;
     }
 }

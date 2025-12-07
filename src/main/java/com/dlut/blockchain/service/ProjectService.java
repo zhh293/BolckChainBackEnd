@@ -327,23 +327,58 @@ public class ProjectService {
      */
     private Project convertToEntity(ProjectDto dto) {
         Project project = new Project();
-        project.setName(dto.getName());
-        project.setDescription(dto.getDescription());
-        project.setStatus(dto.getStatus());
-        project.setCategory(dto.getCategory());
-        project.setIsPublic(dto.getIsPublic());
-        project.setFeatured(dto.getFeatured());
-        project.setGoals(dto.getGoals());
-        project.setTechStack(dto.getTechStack());
-        project.setAchievements(dto.getAchievements());
-        project.setBudget(dto.getBudget().doubleValue());
-        project.setProgress(dto.getProgress());
-        project.setImageUrl(dto.getImageUrl());
-        project.setGithubUrl(dto.getRepositoryUrl());
-        project.setProjectUrl(dto.getDemoUrl());
-        project.setDisplayOrder(dto.getDisplayOrder());
-        project.setStartDate(dto.getStartDate());
-        project.setEndDate(dto.getEndDate());
+
+        // 1. 项目名称：字符串，为空则设null
+        project.setName(dto.getName() != null ? dto.getName() : null);
+
+        // 2. 项目描述：字符串，为空则设null
+        project.setDescription(dto.getDescription() != null ? dto.getDescription() : null);
+
+        // 3. 项目状态：枚举/字符串，为空则设null
+        project.setStatus(dto.getStatus() != null ? dto.getStatus() : null);
+
+        // 4. 项目分类：字符串，为空则设null
+        project.setCategory(dto.getCategory() != null ? dto.getCategory() : null);
+
+        // 5. 是否公共：布尔类型，为空则设默认值false
+        project.setIsPublic(dto.getIsPublic() != null ? dto.getIsPublic() : false);
+
+        // 6. 是否推荐：布尔类型，为空则设默认值false
+        project.setFeatured(dto.getFeatured() != null ? dto.getFeatured() : false);
+
+        // 7. 项目目标：字符串，为空则设null
+        project.setGoals(dto.getGoals() != null ? dto.getGoals() : null);
+
+        // 8. 技术栈：字符串，为空则设null
+        project.setTechStack(dto.getTechStack() != null ? dto.getTechStack() : null);
+
+        // 9. 成果：字符串，为空则设null
+        project.setAchievements(dto.getAchievements() != null ? dto.getAchievements() : null);
+
+        // 10. 预算：BigDecimal转double，先判空，为空则设默认值0.0（避免空指针）
+        project.setBudget(dto.getBudget() != null ? dto.getBudget().doubleValue() : 0.0);
+
+        // 11. 进度：数值类型（假设Integer/Double），为空则设默认值0
+        project.setProgress(dto.getProgress() != null ? dto.getProgress() : 0);
+
+        // 12. 图片URL：字符串，为空则设null
+        project.setImageUrl(dto.getImageUrl() != null ? dto.getImageUrl() : null);
+
+        // 13. Github仓库地址：字符串，为空则设null
+        project.setGithubUrl(dto.getRepositoryUrl() != null ? dto.getRepositoryUrl() : null);
+
+        // 14. 项目演示地址：字符串，为空则设null
+        project.setProjectUrl(dto.getDemoUrl() != null ? dto.getDemoUrl() : null);
+
+        // 15. 展示排序：整型，为空则设默认值0
+        project.setDisplayOrder(dto.getDisplayOrder() != null ? dto.getDisplayOrder() : 0);
+
+        // 16. 开始日期：日期类型（LocalDate/LocalDateTime），为空则设null
+        project.setStartDate(dto.getStartDate() != null ? dto.getStartDate() : null);
+
+        // 17. 结束日期：日期类型，为空则设null
+        project.setEndDate(dto.getEndDate() != null ? dto.getEndDate() : null);
+
         return project;
     }
 
