@@ -1,0 +1,63 @@
+name: API Docs Publish
+
+on:
+  push:
+    branches: ["main", "master"]
+    paths:
+      - "src/main/java/**"
+      - "src/main/resources/**"
+      - "docs/**"
+      - ".github/workflows/docs-publish.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Validate OpenAPI
+        run: npx --yes @redocly/cli@latest lint docs/openapi.yaml
+
+      - name: Bundle OpenAPI JSON
+        run: npx --yes @redocly/cli@latest bundle docs/openapi.yaml -o docs/openapi.json --ext json
+
+      - name: Sync OpenAPI to static
+        run: |
+          cp docs/openapi.yaml docs/site/static/openapi.yaml
+          cp docs/openapi.json docs/site/static/openapi.json
+
+      - name: Install docs dependencies
+        working-directory: docs/site
+        run: npm install
+
+      - name: Build docs site
+        working-directory: docs/site
+        run: npm run build
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/site/build
+
+  deploy-docs:
+    needs: build-docs
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

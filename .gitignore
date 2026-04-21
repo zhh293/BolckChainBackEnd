@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Docs Site ###
+docs/site/node_modules/
+docs/site/.docusaurus/
+docs/site/build/

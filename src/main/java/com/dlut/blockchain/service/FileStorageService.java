@@ -86,6 +86,7 @@ public class FileStorageService {
             fileUpload.setCategory(category);
             fileUpload.setUploadedBy(uploadedBy);
             fileUpload.setUploadedAt(LocalDateTime.now());
+            fileUpload.setUpdatedAt(LocalDateTime.now());
             fileUpload.setDownloadCount(0);
             
             FileUpload savedFile = fileUploadRepository.save(fileUpload);

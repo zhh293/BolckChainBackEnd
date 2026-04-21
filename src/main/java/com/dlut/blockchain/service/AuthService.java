@@ -2,6 +2,9 @@ package com.dlut.blockchain.service;
 
 import com.dlut.blockchain.entity.User;
 import com.dlut.blockchain.repository.UserRepository;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,11 +26,13 @@ public class AuthService {
      * 验证管理员身份 - 极简版本
      * 仅验证用户名密码是否正确
      */
-    public boolean validateAdmin(String username, String password) {
+    public boolean validateAdmin(String username, String password, HttpSession session, HttpServletResponse response) {
         try {
             // 查找用户
             User user = userRepository.findByUsernameOrEmail(username)
                     .orElse(null);
+
+
             
             if (user == null) {
                 log.warn("管理员验证失败 - 用户不存在: {}", username);
@@ -46,6 +51,7 @@ public class AuthService {
                 return false;
             }
 
+
             
             // 验证密码
             boolean passwordValid = passwordEncoder.matches(user.getPassword(), password);
@@ -55,6 +61,15 @@ public class AuthService {
             }
             
             log.info("管理员验证成功: {}", username);
+            session.setAttribute("user", user);
+            log.info("存入session的user对象是{}",session.getAttribute("user"));
+            // 核心修复：创建JSESSIONID的Cookie并写入响应
+            Cookie jsessionIdCookie = new Cookie("JSESSIONID", session.getId());
+            jsessionIdCookie.setPath("/"); // 关键：让所有路径的请求都携带这个Cookie
+            jsessionIdCookie.setHttpOnly(true); // 安全：防止XSS攻击，前端无法通过JS读取（不影响携带）
+            jsessionIdCookie.setMaxAge(-1); // 会话级Cookie（关闭浏览器失效，也可设为正数持久化）
+            jsessionIdCookie.setSecure(false); // 非HTTPS环境设为false，HTTPS需设为true
+            response.addCookie(jsessionIdCookie);
             return true;
             
         } catch (Exception e) {

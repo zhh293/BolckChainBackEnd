@@ -5,6 +5,7 @@ import com.dlut.blockchain.dto.AuthResponse;
 import com.dlut.blockchain.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,16 +33,17 @@ public class AuthController {
      */
     @PostMapping("/login")
     @Operation(summary = "管理员登录", description = "管理员登录接口，验证用户名密码")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest request, HttpSession session) {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest request, HttpSession session, HttpServletResponse  response1) {
         log.info("管理员登录请求: {}", request.getUsername());
+        log.info("JSESSIONID: {}", session.getId());
         try {
             // 验证用户名密码
-            boolean isValid = authService.validateAdmin(request.getUsername(), request.getPassword());
+            boolean isValid = authService.validateAdmin(request.getUsername(), request.getPassword(),session,response1);
             
             if (isValid) {
                 // 登录成功，保存到Session
-                session.setAttribute(ADMIN_SESSION_KEY, true);
-                session.setAttribute("admin_username", request.getUsername());
+//                session.setAttribute(ADMIN_SESSION_KEY, true);
+//                session.setAttribute("admin_username", request.getUsername());
                 
                 AuthResponse response = new AuthResponse(
                     "admin_session",  // 简单的session标识
