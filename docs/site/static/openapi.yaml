@@ -1,0 +1,2786 @@
+openapi: 3.0.3
+info:
+  title: 区块链实验室网站后端API
+  description: |
+    区块链实验室网站后端接口文档（基于控制器代码校准）。
+    
+    鉴权说明：
+    - 当前安全配置为 `permitAll`，技术上所有接口可访问。
+    - 部分写接口依赖 Session（Cookie: JSESSIONID）或约定“隐藏入口访问”，文档中以“业务权限”标注。
+  version: 1.0.0
+  contact:
+    email: support@blockchain-lab.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8082/api
+    description: 开发环境
+  - url: http://test.blockchain-lab.com:8082/api
+    description: 测试环境
+  - url: http://pre.blockchain-lab.com:8082/api
+    description: 预发环境
+  - url: http://blockchain-lab.com:8082/api
+    description: 生产环境
+
+tags:
+  - name: 认证管理
+    description: 管理员登录相关接口
+  - name: 实验室成员管理
+    description: 实验室成员相关接口
+  - name: 项目管理
+    description: 项目相关接口
+  - name: 博客文章管理
+    description: 博客文章相关接口
+  - name: 例会管理
+    description: 实验室例会相关接口
+  - name: 文件管理
+    description: 文件上传下载相关接口
+  - name: 数据统计
+    description: 系统数据统计相关接口
+  - name: 缓存管理
+    description: 系统缓存管理相关接口
+  - name: 性能监控
+    description: 系统性能指标查询接口
+  - name: 访问统计
+    description: 网站访问行为统计接口
+
+paths:
+  /auth/login:
+    post:
+      tags:
+        - 认证管理
+      summary: 管理员登录
+      description: 管理员登录接口，验证用户名密码
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+            examples:
+              example1:
+                summary: 登录示例
+                value:
+                  username: admin
+                  password: 123456
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              examples:
+                example1:
+                  summary: 登录成功
+                  value:
+                    accessToken: admin_session
+                    refreshToken: ""
+                    tokenType: Bearer
+                    expiresIn: 3600000
+                    username: admin
+                    role: ADMIN
+        '400':
+          description: 用户名或密码错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                example1:
+                  summary: 登录失败
+                  value:
+                    message: 用户名或密码错误
+
+  /auth/validate:
+    get:
+      tags:
+        - 认证管理
+      summary: 检查登录状态
+      description: 检查管理员是否已登录
+      operationId: validateLogin
+      responses:
+        '200':
+          description: 登录状态
+          content:
+            application/json:
+              schema:
+                type: boolean
+              examples:
+                example1:
+                  summary: 已登录
+                  value: true
+                example2:
+                  summary: 未登录
+                  value: false
+
+  /auth/logout:
+    post:
+      tags:
+        - 认证管理
+      summary: 管理员登出
+      description: 管理员登出接口
+      operationId: logout
+      responses:
+        '200':
+          description: 登出成功
+          content:
+            application/json:
+              schema:
+                type: string
+              examples:
+                example1:
+                  summary: 登出成功
+                  value: 登出成功
+
+  /members:
+    get:
+      tags:
+        - 实验室成员管理
+      summary: 获取所有成员
+      description: 分页获取所有实验室成员
+      operationId: getAllMembers
+      parameters:
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: 每页大小
+          schema:
+            type: integer
+            default: 20
+        - name: sortBy
+          in: query
+          description: 排序字段
+          schema:
+            type: string
+            default: id
+        - name: sortDirection
+          in: query
+          description: 排序方向
+          schema:
+            type: string
+            default: DESC
+            enum: [ASC, DESC]
+      responses:
+        '200':
+          description: 成员列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageMemberDto'
+    post:
+      tags:
+        - 实验室成员管理
+      summary: 创建成员
+      description: 创建新的实验室成员（隐藏入口访问）
+      operationId: createMember
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberDto'
+      responses:
+        '200':
+          description: 创建的成员信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberDto'
+
+  /members/active:
+    get:
+      tags:
+        - 实验室成员管理
+      summary: 获取活跃成员
+      description: 获取所有活跃的实验室成员
+      operationId: getAllActiveMembers
+      responses:
+        '200':
+          description: 活跃成员列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemberDto'
+
+  /members/featured:
+    get:
+      tags:
+        - 实验室成员管理
+      summary: 获取特色成员
+      description: 获取特色实验室成员
+      operationId: getFeaturedMembers
+      responses:
+        '200':
+          description: 特色成员列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemberDto'
+
+  /members/{id}:
+    get:
+      tags:
+        - 实验室成员管理
+      summary: 根据ID获取成员
+      description: 根据ID获取实验室成员详细信息
+      operationId: getMemberById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 成员ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成员详细信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberDto'
+    put:
+      tags:
+        - 实验室成员管理
+      summary: 更新成员
+      description: 更新实验室成员信息（隐藏入口访问）
+      operationId: updateMember
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 成员ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberDto'
+      responses:
+        '200':
+          description: 更新后的成员信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberDto'
+    delete:
+      tags:
+        - 实验室成员管理
+      summary: 删除成员
+      description: 删除实验室成员（隐藏入口访问）
+      operationId: deleteMember
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 成员ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 删除成功
+
+  /members/{id}/status:
+    patch:
+      tags:
+        - 实验室成员管理
+      summary: 更新成员状态
+      description: 更新实验室成员状态（隐藏入口访问）
+      operationId: updateMemberStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 成员ID
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: true
+          description: 成员状态
+          schema:
+            type: string
+            enum: [ACTIVE, INACTIVE, GRADUATED]
+      responses:
+        '200':
+          description: 更新后的成员信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberDto'
+
+  /members/{id}/display-order:
+    patch:
+      tags:
+        - 实验室成员管理
+      summary: 更新成员显示顺序
+      description: 更新实验室成员显示顺序（隐藏入口访问）
+      operationId: updateMemberDisplayOrder
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 成员ID
+          schema:
+            type: integer
+        - name: displayOrder
+          in: query
+          required: true
+          description: 显示顺序
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 更新成功
+
+  /projects:
+    get:
+      tags:
+        - 项目管理
+      summary: 获取所有项目
+      description: 分页获取所有项目
+      operationId: getAllProjects
+      parameters:
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: 每页大小
+          schema:
+            type: integer
+            default: 20
+        - name: pageSize
+          in: query
+          description: 每页大小（优先使用）
+          schema:
+            type: integer
+        - name: sortBy
+          in: query
+          description: 排序字段
+          schema:
+            type: string
+            default: id
+        - name: sortDirection
+          in: query
+          description: 排序方向
+          schema:
+            type: string
+            default: DESC
+            enum: [ASC, DESC]
+        - name: keyword
+          in: query
+          description: 搜索关键词
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: 项目状态
+          schema:
+            type: string
+        - name: category
+          in: query
+          description: 项目分类
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 项目列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageProjectDto'
+    post:
+      tags:
+        - 项目管理
+      summary: 创建项目
+      description: 创建新项目（隐藏入口访问）
+      operationId: createProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectDto'
+      responses:
+        '200':
+          description: 创建的项目信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDto'
+
+  /projects/public:
+    get:
+      tags:
+        - 项目管理
+      summary: 获取公开项目
+      description: 获取所有公开的项目
+      operationId: getPublicProjects
+      responses:
+        '200':
+          description: 公开项目列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectDto'
+
+  /projects/featured:
+    get:
+      tags:
+        - 项目管理
+      summary: 获取特色项目
+      description: 获取特色项目
+      operationId: getFeaturedProjects
+      responses:
+        '200':
+          description: 特色项目列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectDto'
+
+  /projects/ongoing:
+    get:
+      tags:
+        - 项目管理
+      summary: 获取进行中的项目
+      description: 获取进行中的项目
+      operationId: getOngoingProjects
+      responses:
+        '200':
+          description: 进行中项目列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectDto'
+
+  /projects/completed:
+    get:
+      tags:
+        - 项目管理
+      summary: 获取已完成的项目
+      description: 获取已完成的项目
+      operationId: getCompletedProjects
+      responses:
+        '200':
+          description: 已完成项目列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectDto'
+
+  /projects/{id}:
+    get:
+      tags:
+        - 项目管理
+      summary: 根据ID获取项目
+      description: 根据ID获取项目详细信息
+      operationId: getProjectById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 项目ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 项目详细信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDto'
+    put:
+      tags:
+        - 项目管理
+      summary: 更新项目
+      description: 更新项目信息（隐藏入口访问）
+      operationId: updateProject
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 项目ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectDto'
+      responses:
+        '200':
+          description: 更新后的项目信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDto'
+    delete:
+      tags:
+        - 项目管理
+      summary: 删除项目
+      description: 删除项目（隐藏入口访问）
+      operationId: deleteProject
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 项目ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 删除成功
+
+  /projects/{id}/status:
+    patch:
+      tags:
+        - 项目管理
+      summary: 更新项目状态
+      description: 更新项目状态（隐藏入口访问）
+      operationId: updateProjectStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 项目ID
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: true
+          description: 项目状态
+          schema:
+            type: string
+            enum: [PLANNING, IN_PROGRESS, COMPLETED, CANCELLED, ON_HOLD, ONGOING]
+      responses:
+        '200':
+          description: 更新后的项目信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDto'
+
+  /projects/{id}/progress:
+    patch:
+      tags:
+        - 项目管理
+      summary: 更新项目进度
+      description: 更新项目进度（隐藏入口访问）
+      operationId: updateProjectProgress
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 项目ID
+          schema:
+            type: integer
+        - name: progress
+          in: query
+          required: true
+          description: 项目进度
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 100
+      responses:
+        '200':
+          description: 更新后的项目信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDto'
+
+  /projects/{id}/display-order:
+    patch:
+      tags:
+        - 项目管理
+      summary: 更新项目显示顺序
+      description: 更新项目显示顺序（隐藏入口访问）
+      operationId: updateProjectDisplayOrder
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 项目ID
+          schema:
+            type: integer
+        - name: displayOrder
+          in: query
+          required: true
+          description: 显示顺序
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 更新成功
+
+  /posts:
+    get:
+      tags:
+        - 博客文章管理
+      summary: 获取所有文章
+      description: 分页获取所有已发布的博客文章
+      operationId: getAllPublishedPosts
+      parameters:
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: 每页大小
+          schema:
+            type: integer
+            default: 10
+        - name: sortBy
+          in: query
+          description: 排序字段
+          schema:
+            type: string
+            default: createdAt
+        - name: sortDirection
+          in: query
+          description: 排序方向
+          schema:
+            type: string
+            default: DESC
+            enum: [ASC, DESC]
+      responses:
+        '200':
+          description: 文章列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagePostDto'
+    post:
+      tags:
+        - 博客文章管理
+      summary: 创建文章
+      description: 创建新的博客文章（隐藏入口访问）
+      operationId: createPost
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostDto'
+      responses:
+        '200':
+          description: 创建的文章信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDto'
+        '401':
+          description: 未授权
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                example1:
+                  summary: 未登录
+                  value:
+                    message: 未找到有效 Session，浏览器未携带 JSESSIONID 或 Session 已失效
+
+  /posts/featured:
+    get:
+      tags:
+        - 博客文章管理
+      summary: 获取特色文章
+      description: 获取特色博客文章
+      operationId: getFeaturedPosts
+      responses:
+        '200':
+          description: 特色文章列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PostDto'
+
+  /posts/latest:
+    get:
+      tags:
+        - 博客文章管理
+      summary: 获取最新文章
+      description: 获取最新的博客文章
+      operationId: getLatestPosts
+      parameters:
+        - name: limit
+          in: query
+          description: 文章数量
+          schema:
+            type: integer
+            default: 5
+      responses:
+        '200':
+          description: 最新文章列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PostDto'
+
+  /posts/{id}:
+    get:
+      tags:
+        - 博客文章管理
+      summary: 根据ID获取文章
+      description: 根据ID获取博客文章详细信息
+      operationId: getPostById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 文章ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 文章详细信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDto'
+    put:
+      tags:
+        - 博客文章管理
+      summary: 更新文章
+      description: 更新博客文章（隐藏入口访问）
+      operationId: updatePost
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 文章ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostDto'
+      responses:
+        '200':
+          description: 更新后的文章信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDto'
+    delete:
+      tags:
+        - 博客文章管理
+      summary: 删除文章
+      description: 删除博客文章（隐藏入口访问）
+      operationId: deletePost
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 文章ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 删除成功
+
+  /posts/{id}/status:
+    patch:
+      tags:
+        - 博客文章管理
+      summary: 更新文章状态
+      description: 更新博客文章状态（隐藏入口访问）
+      operationId: updatePostStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 文章ID
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: true
+          description: 文章状态
+          schema:
+            type: string
+            enum: [DRAFT, PUBLISHED, ARCHIVED]
+      responses:
+        '200':
+          description: 更新后的文章信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDto'
+
+  /posts/{id}/like:
+    post:
+      tags:
+        - 博客文章管理
+      summary: 点赞文章
+      description: 点赞博客文章
+      operationId: likePost
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 文章ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 点赞成功
+    delete:
+      tags:
+        - 博客文章管理
+      summary: 取消点赞文章
+      description: 取消点赞博客文章
+      operationId: unlikePost
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 文章ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 取消点赞成功
+
+  /posts/{id}/display-order:
+    patch:
+      tags:
+        - 博客文章管理
+      summary: 更新文章显示顺序
+      description: 更新博客文章显示顺序（隐藏入口访问）
+      operationId: updatePostDisplayOrder
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 文章ID
+          schema:
+            type: integer
+        - name: displayOrder
+          in: query
+          required: true
+          description: 显示顺序
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 更新成功
+
+  /posts/statistics:
+    get:
+      tags:
+        - 博客文章管理
+      summary: 获取文章统计
+      description: 获取博客文章统计信息（隐藏入口访问）
+      operationId: getPostStatistics
+      responses:
+        '200':
+          description: 统计信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultMapStringObject'
+
+  /meetings:
+    get:
+      tags:
+        - 例会管理
+      summary: 获取所有例会
+      description: 分页获取所有例会
+      operationId: getAllMeetings
+      parameters:
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: 每页大小
+          schema:
+            type: integer
+            default: 10
+        - name: sortBy
+          in: query
+          description: 排序字段
+          schema:
+            type: string
+            default: meetingTime
+        - name: sortDirection
+          in: query
+          description: 排序方向
+          schema:
+            type: string
+            default: DESC
+            enum: [ASC, DESC]
+      responses:
+        '200':
+          description: 例会列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageMeetingDto'
+    post:
+      tags:
+        - 例会管理
+      summary: 创建例会
+      description: 创建新的例会（隐藏入口访问）
+      operationId: createMeeting
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeetingDto'
+      responses:
+        '200':
+          description: 创建的例会信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeetingDto'
+
+  /meetings/completed:
+    get:
+      tags:
+        - 例会管理
+      summary: 获取已完成的例会
+      description: 获取所有已完成的例会
+      operationId: getCompletedMeetings
+      responses:
+        '200':
+          description: 已完成例会列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MeetingDto'
+
+  /meetings/upcoming:
+    get:
+      tags:
+        - 例会管理
+      summary: 获取即将举行的例会
+      description: 获取即将举行的例会
+      operationId: getUpcomingMeetings
+      responses:
+        '200':
+          description: 即将举行的例会列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MeetingDto'
+
+  /meetings/{id}:
+    get:
+      tags:
+        - 例会管理
+      summary: 根据ID获取例会
+      description: 根据ID获取例会详细信息
+      operationId: getMeetingById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 例会ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 例会详细信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeetingDto'
+    put:
+      tags:
+        - 例会管理
+      summary: 更新例会
+      description: 更新例会（隐藏入口访问）
+      operationId: updateMeeting
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 例会ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeetingDto'
+      responses:
+        '200':
+          description: 更新后的例会信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeetingDto'
+    delete:
+      tags:
+        - 例会管理
+      summary: 删除例会
+      description: 删除例会（隐藏入口访问）
+      operationId: deleteMeeting
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 例会ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 删除成功
+
+  /meetings/{id}/status:
+    patch:
+      tags:
+        - 例会管理
+      summary: 更新例会状态
+      description: 更新例会状态（隐藏入口访问）
+      operationId: updateMeetingStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 例会ID
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: true
+          description: 例会状态
+          schema:
+            type: string
+            enum: [SCHEDULED, COMPLETED, CANCELLED]
+      responses:
+        '200':
+          description: 更新后的例会信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeetingDto'
+
+  /meetings/{id}/display-order:
+    patch:
+      tags:
+        - 例会管理
+      summary: 更新例会显示顺序
+      description: 更新例会显示顺序（隐藏入口访问）
+      operationId: updateMeetingDisplayOrder
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 例会ID
+          schema:
+            type: integer
+        - name: displayOrder
+          in: query
+          required: true
+          description: 显示顺序
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 更新成功
+
+  /meetings/statistics:
+    get:
+      tags:
+        - 例会管理
+      summary: 获取例会统计
+      description: 获取例会统计信息
+      operationId: getMeetingStatistics
+      responses:
+        '200':
+          description: 统计信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultMapStringObject'
+
+  /files/upload:
+    post:
+      tags:
+        - 文件管理
+      summary: 上传文件
+      description: 上传文件到服务器（隐藏入口访问）
+      operationId: uploadFile
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: 上传的文件
+                category:
+                  type: string
+                  description: 文件分类
+                description:
+                  type: string
+                  description: 文件描述
+      responses:
+        '200':
+          description: 文件信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUploadDto'
+
+  /files/download/{fileName}:
+    get:
+      tags:
+        - 文件管理
+      summary: 下载文件
+      description: 从服务器下载文件
+      operationId: downloadFile
+      parameters:
+        - name: fileName
+          in: path
+          required: true
+          description: 文件名
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 文件内容
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  /files:
+    get:
+      tags:
+        - 文件管理
+      summary: 获取所有文件
+      description: 分页获取所有上传的文件
+      operationId: getAllFiles
+      parameters:
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: 每页大小
+          schema:
+            type: integer
+            default: 10
+        - name: sortBy
+          in: query
+          description: 排序字段
+          schema:
+            type: string
+            default: uploadedAt
+        - name: sortDirection
+          in: query
+          description: 排序方向
+          schema:
+            type: string
+            default: DESC
+            enum: [ASC, DESC]
+      responses:
+        '200':
+          description: 文件列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageFileUploadDto'
+
+  /files/{id}:
+    get:
+      tags:
+        - 文件管理
+      summary: 获取文件信息
+      description: 根据ID获取文件详细信息
+      operationId: getFileInfo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 文件ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 文件信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultFileUploadDto'
+        '400':
+          description: 文件不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - 文件管理
+      summary: 更新文件信息
+      description: 更新文件描述和分类信息（隐藏入口访问）
+      operationId: updateFileInfo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 文件ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  description: 文件描述
+                category:
+                  type: string
+                  description: 文件分类
+      responses:
+        '200':
+          description: 更新后的文件信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUploadDto'
+    delete:
+      tags:
+        - 文件管理
+      summary: 删除文件
+      description: 删除文件（隐藏入口访问）
+      operationId: deleteFile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 文件ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 删除成功
+
+  /files/statistics:
+    get:
+      tags:
+        - 文件管理
+      summary: 获取文件统计
+      description: 获取文件上传和下载统计信息（隐藏入口访问）
+      operationId: getFileStatistics
+      responses:
+        '200':
+          description: 统计信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultMapStringObject'
+
+  /stats/overview:
+    get:
+      tags:
+        - 数据统计
+      summary: 系统概览统计
+      description: 获取系统的整体统计数据
+      operationId: getOverviewStats
+      responses:
+        '200':
+          description: 系统概览统计
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultMapStringObject'
+
+  /stats/users:
+    get:
+      tags:
+        - 数据统计
+      summary: 用户统计
+      description: 获取用户相关的统计数据
+      operationId: getUserStats
+      responses:
+        '200':
+          description: 用户统计
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultMapStringObject'
+
+  /stats/content:
+    get:
+      tags:
+        - 数据统计
+      summary: 内容统计
+      description: 获取内容相关的统计数据（博客、项目、成员、例会）
+      operationId: getContentStats
+      responses:
+        '200':
+          description: 内容统计
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultMapStringObject'
+
+  /stats/trends:
+    get:
+      tags:
+        - 数据统计
+      summary: 趋势统计
+      description: 获取指定时间范围内的趋势数据
+      operationId: getTrendStats
+      parameters:
+        - name: days
+          in: query
+          description: 统计天数
+          schema:
+            type: integer
+            default: 30
+            minimum: 1
+      responses:
+        '200':
+          description: 趋势统计
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultMapStringObject'
+
+  /stats/activity:
+    get:
+      tags:
+        - 数据统计
+      summary: 活跃度统计
+      description: 获取用户活跃度统计数据
+      operationId: getActivityStats
+      responses:
+        '200':
+          description: 活跃度统计
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultMapStringObject'
+
+  /stats/categories:
+    get:
+      tags:
+        - 数据统计
+      summary: 分类统计
+      description: 获取内容按分类的统计数据
+      operationId: getCategoryStats
+      responses:
+        '200':
+          description: 分类统计
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultMapStringObject'
+
+  /stats/files:
+    get:
+      tags:
+        - 数据统计
+      summary: 文件统计
+      description: 获取文件相关的统计数据
+      operationId: getFileStats
+      responses:
+        '200':
+          description: 文件统计
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultMapStringObject'
+
+  /stats/range:
+    get:
+      tags:
+        - 数据统计
+      summary: 时间范围统计
+      description: 获取指定时间范围内的统计数据
+      operationId: getStatsByDateRange
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          description: 开始日期（YYYY-MM-DD）
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          description: 结束日期（YYYY-MM-DD）
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: 时间范围统计
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultMapStringObject'
+        '400':
+          description: 日期格式错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /stats/realtime:
+    get:
+      tags:
+        - 数据统计
+      summary: 实时统计
+      description: 获取实时的系统统计数据
+      operationId: getRealtimeStats
+      responses:
+        '200':
+          description: 实时统计
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultMapStringObject'
+
+  /stats/export:
+    get:
+      tags:
+        - 数据统计
+      summary: 导出统计
+      description: 导出统计数据为JSON格式
+      operationId: exportStats
+      responses:
+        '200':
+          description: 导出的统计数据
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultMapStringObject'
+
+  /members/student/{studentId}:
+    get:
+      tags:
+        - 实验室成员管理
+      summary: 根据学号获取成员
+      description: 根据学号获取实验室成员详细信息
+      operationId: getMemberByStudentId
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          description: 学号
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成员详细信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberDto'
+
+  /members/role/{role}:
+    get:
+      tags:
+        - 实验室成员管理
+      summary: 根据角色获取成员
+      operationId: getMembersByRole
+      parameters:
+        - name: role
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [LEADER, VICE_LEADER, SECRETARY, MEMBER]
+      responses:
+        '200':
+          description: 成员列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemberDto'
+
+  /members/grade/{grade}:
+    get:
+      tags:
+        - 实验室成员管理
+      summary: 根据年级获取成员
+      operationId: getMembersByGrade
+      parameters:
+        - name: grade
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成员列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemberDto'
+
+  /members/search:
+    get:
+      tags:
+        - 实验室成员管理
+      summary: 搜索成员
+      operationId: searchMembers
+      parameters:
+        - name: keyword
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 搜索结果
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemberDto'
+
+  /projects/status/{status}:
+    get:
+      tags:
+        - 项目管理
+      summary: 根据状态获取项目
+      operationId: getProjectsByStatus
+      parameters:
+        - name: status
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [PLANNING, IN_PROGRESS, COMPLETED, CANCELLED, ON_HOLD, ONGOING]
+      responses:
+        '200':
+          description: 项目列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectDto'
+
+  /projects/category/{category}:
+    get:
+      tags:
+        - 项目管理
+      summary: 根据分类获取项目
+      operationId: getProjectsByCategory
+      parameters:
+        - name: category
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 项目列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectDto'
+
+  /projects/search:
+    get:
+      tags:
+        - 项目管理
+      summary: 搜索项目
+      operationId: searchProjects
+      parameters:
+        - name: keyword
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 搜索结果
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectDto'
+
+  /projects/date-range:
+    get:
+      tags:
+        - 项目管理
+      summary: 根据日期范围获取项目
+      operationId: getProjectsByDateRange
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: 项目列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectDto'
+
+  /projects/budget-range:
+    get:
+      tags:
+        - 项目管理
+      summary: 根据预算范围获取项目
+      operationId: getProjectsByBudgetRange
+      parameters:
+        - name: minBudget
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: maxBudget
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 项目列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectDto'
+
+  /projects/progress-range:
+    get:
+      tags:
+        - 项目管理
+      summary: 根据进度范围获取项目
+      operationId: getProjectsByProgressRange
+      parameters:
+        - name: minProgress
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 100
+        - name: maxProgress
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 100
+      responses:
+        '200':
+          description: 项目列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectDto'
+
+  /posts/search:
+    get:
+      tags:
+        - 博客文章管理
+      summary: 搜索文章
+      operationId: searchPosts
+      parameters:
+        - name: keyword
+          in: query
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+        - $ref: '#/components/parameters/SortByCreatedAtParam'
+        - $ref: '#/components/parameters/SortDirectionParam'
+      responses:
+        '200':
+          description: 搜索结果
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagePostDto'
+
+  /posts/tag/{tag}:
+    get:
+      tags:
+        - 博客文章管理
+      summary: 根据标签获取文章
+      operationId: getPostsByTag
+      parameters:
+        - name: tag
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 文章列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PostDto'
+
+  /files/category/{category}:
+    get:
+      tags:
+        - 文件管理
+      summary: 根据分类获取文件
+      operationId: getFilesByCategory
+      parameters:
+        - name: category
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 文件列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FileUploadDto'
+
+  /files/search:
+    get:
+      tags:
+        - 文件管理
+      summary: 搜索文件
+      operationId: searchFiles
+      parameters:
+        - name: keyword
+          in: query
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam10'
+        - $ref: '#/components/parameters/SortByUploadedAtParam'
+        - $ref: '#/components/parameters/SortDirectionParam'
+      responses:
+        '200':
+          description: 搜索结果
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageFileUploadDto'
+
+  /files/name/{fileName}:
+    get:
+      tags:
+        - 文件管理
+      summary: 根据文件名获取文件信息
+      operationId: getFileInfoByFileName
+      parameters:
+        - name: fileName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 文件信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultFileUploadDto'
+        '404':
+          description: 文件不存在
+
+  /cache/clear-all:
+    delete:
+      tags:
+        - 缓存管理
+      summary: 清除所有缓存
+      operationId: clearAllCaches
+      responses:
+        '200':
+          description: 清除成功
+          content:
+            text/plain:
+              schema:
+                type: string
+        '500':
+          description: 清除失败
+
+  /cache/clear/{cacheName}:
+    delete:
+      tags:
+        - 缓存管理
+      summary: 清除指定缓存
+      operationId: clearCache
+      parameters:
+        - name: cacheName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 清除成功
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: 缓存不存在
+        '500':
+          description: 清除失败
+
+  /cache/names:
+    get:
+      tags:
+        - 缓存管理
+      summary: 获取缓存名称列表
+      operationId: getCacheNames
+      responses:
+        '200':
+          description: 缓存名称列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /performance/stats:
+    get:
+      tags:
+        - 性能监控
+      summary: 获取系统性能统计
+      operationId: getPerformanceStats
+      responses:
+        '200':
+          description: 性能统计
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultMapStringObject'
+
+  /performance/metrics/api:
+    get:
+      tags:
+        - 性能监控
+      summary: 获取API性能指标
+      operationId: getApiMetrics
+      responses:
+        '200':
+          description: API指标
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultMapStringObject'
+
+  /performance/metrics/database:
+    get:
+      tags:
+        - 性能监控
+      summary: 获取数据库性能指标
+      operationId: getDatabaseMetrics
+      responses:
+        '200':
+          description: 数据库指标
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultMapStringObject'
+
+  /performance/metrics/system:
+    get:
+      tags:
+        - 性能监控
+      summary: 获取系统资源指标
+      operationId: getSystemMetrics
+      responses:
+        '200':
+          description: 系统指标
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultMapStringObject'
+
+  /performance/metrics/all:
+    get:
+      tags:
+        - 性能监控
+      summary: 获取全部性能指标
+      operationId: getAllMetrics
+      responses:
+        '200':
+          description: 所有指标
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultMapStringObject'
+
+  /visit-stats/overview:
+    get:
+      tags:
+        - 访问统计
+      summary: 获取访问概览统计
+      operationId: getVisitOverview
+      responses:
+        '200':
+          description: 概览统计
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /visit-stats/trend:
+    get:
+      tags:
+        - 访问统计
+      summary: 获取访问趋势统计
+      operationId: getVisitTrend
+      parameters:
+        - name: days
+          in: query
+          description: 天数，1-365
+          schema:
+            type: integer
+            default: 30
+            minimum: 1
+            maximum: 365
+      responses:
+        '200':
+          description: 趋势统计
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          description: 参数错误
+
+  /visit-stats/devices:
+    get:
+      tags:
+        - 访问统计
+      summary: 获取设备统计
+      operationId: getDeviceStats
+      parameters:
+        - $ref: '#/components/parameters/StartDateParam'
+        - $ref: '#/components/parameters/EndDateParam'
+      responses:
+        '200':
+          description: 设备统计
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /visit-stats/browsers:
+    get:
+      tags:
+        - 访问统计
+      summary: 获取浏览器统计
+      operationId: getBrowserStats
+      parameters:
+        - $ref: '#/components/parameters/StartDateParam'
+        - $ref: '#/components/parameters/EndDateParam'
+      responses:
+        '200':
+          description: 浏览器统计
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /visit-stats/traffic-sources:
+    get:
+      tags:
+        - 访问统计
+      summary: 获取流量来源统计
+      operationId: getTrafficSourceStats
+      parameters:
+        - $ref: '#/components/parameters/StartDateParam'
+        - $ref: '#/components/parameters/EndDateParam'
+      responses:
+        '200':
+          description: 流量来源统计
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /visit-stats/top-pages:
+    get:
+      tags:
+        - 访问统计
+      summary: 获取热门页面统计
+      operationId: getTopPages
+      parameters:
+        - $ref: '#/components/parameters/StartDateParam'
+        - $ref: '#/components/parameters/EndDateParam'
+        - name: limit
+          in: query
+          description: 返回数量，1-100
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: 热门页面统计
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          description: 参数错误
+
+  /visit-stats/performance:
+    get:
+      tags:
+        - 访问统计
+      summary: 获取访问性能统计
+      operationId: getPerformanceStatsInVisit
+      parameters:
+        - $ref: '#/components/parameters/StartDateParam'
+        - $ref: '#/components/parameters/EndDateParam'
+      responses:
+        '200':
+          description: 性能统计
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /visit-stats/realtime:
+    get:
+      tags:
+        - 访问统计
+      summary: 获取实时访问统计
+      operationId: getRealtimeVisitStats
+      responses:
+        '200':
+          description: 实时访问统计
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+components:
+  schemas:
+    AuthRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 50
+          description: 用户名
+        password:
+          type: string
+          minLength: 6
+          maxLength: 100
+          description: 密码
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: 访问令牌（当前实现为 session 标识）
+        refreshToken:
+          type: string
+          description: 刷新令牌
+        tokenType:
+          type: string
+          default: Bearer
+          description: 令牌类型
+        expiresIn:
+          type: integer
+          format: int64
+          description: 过期时间（毫秒）
+        username:
+          type: string
+          description: 用户名
+        role:
+          type: string
+          description: 角色
+
+    MemberDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 成员ID
+        name:
+          type: string
+          description: 成员姓名
+        studentId:
+          type: string
+          description: 学号
+        role:
+          type: string
+          enum: [LEADER, VICE_LEADER, SECRETARY, MEMBER]
+          description: 角色
+        gender:
+          type: string
+          enum: [MALE, FEMALE, OTHER]
+          description: 性别
+        grade:
+          type: string
+          description: 年级
+        email:
+          type: string
+          format: email
+          description: 邮箱
+        phone:
+          type: string
+          description: 电话
+        avatarUrl:
+          type: string
+          format: uri
+          description: 头像
+        bio:
+          type: string
+          description: 个人简介
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE, GRADUATED]
+          description: 状态
+        displayOrder:
+          type: integer
+          description: 显示顺序
+        createdAt:
+          type: string
+          format: date-time
+          description: 创建时间
+        updatedAt:
+          type: string
+          format: date-time
+          description: 更新时间
+
+    ProjectDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: 项目ID
+        name:
+          type: string
+          description: 项目名称
+        description:
+          type: string
+          description: 项目描述
+        category:
+          type: string
+          enum: [RESEARCH, DEVELOPMENT, COMPETITION, COLLABORATION, EDUCATION, BLOCKCHAIN, SMART_CONTRACT, IDENTITY, FINANCE, NFT, PAYMENT, HEALTHCARE, REAL_ESTATE, LOGISTICS, ENVIRONMENT, CHARITY, INSURANCE, INTELLECTUAL_PROPERTY, GOVERNANCE, GAMING, FOOD_SAFETY, ENERGY, WALLET, Wallet, wallet]
+          description: 项目分类
+        status:
+          type: string
+          enum: [PLANNING, IN_PROGRESS, COMPLETED, CANCELLED, ON_HOLD, ONGOING]
+          description: 项目状态
+        startDate:
+          type: string
+          format: date
+          description: 开始日期
+        endDate:
+          type: string
+          format: date
+          description: 结束日期
+        budget:
+          type: integer
+          description: 项目预算
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: 项目进度
+        isPublic:
+          type: boolean
+          description: 是否公开
+        featured:
+          type: boolean
+          description: 是否特色
+        goals:
+          type: string
+          maxLength: 500
+          description: 项目目标
+        techStack:
+          type: string
+          maxLength: 1000
+          description: 技术栈
+        achievements:
+          type: string
+          maxLength: 500
+          description: 项目成果
+        imageUrl:
+          type: string
+          maxLength: 200
+          description: 项目图片
+        repositoryUrl:
+          type: string
+          maxLength: 200
+          description: 仓库链接
+        demoUrl:
+          type: string
+          maxLength: 200
+          description: 演示链接
+        documentationUrl:
+          type: string
+          maxLength: 200
+          description: 文档链接
+        displayOrder:
+          type: integer
+          description: 显示顺序
+        createdAt:
+          type: string
+          format: date-time
+          description: 创建时间
+        updatedAt:
+          type: string
+          format: date-time
+          description: 更新时间
+
+    PostDto:
+      type: object
+      required:
+        - title
+        - content
+      properties:
+        id:
+          type: integer
+          description: 文章ID
+        title:
+          type: string
+          description: 文章标题
+        content:
+          type: string
+          description: 文章内容
+        summary:
+          type: string
+          description: 文章摘要
+        author:
+          type: string
+          description: 作者
+        tags:
+          type: string
+          maxLength: 500
+          description: 标签（逗号分隔）
+        status:
+          type: string
+          enum: [DRAFT, PUBLISHED, ARCHIVED]
+          description: 状态
+        viewCount:
+          type: integer
+          description: 浏览量
+        likeCount:
+          type: integer
+          description: 点赞数
+        commentCount:
+          type: integer
+          description: 评论数
+        allowComments:
+          type: boolean
+          description: 是否允许评论
+        featured:
+          type: boolean
+          description: 是否特色
+        publishedAt:
+          type: string
+          format: date-time
+          description: 发布时间
+        displayOrder:
+          type: integer
+          description: 显示顺序
+        createdAt:
+          type: string
+          format: date-time
+          description: 创建时间
+        updatedAt:
+          type: string
+          format: date-time
+          description: 更新时间
+
+    MeetingDto:
+      type: object
+      required:
+        - title
+      properties:
+        id:
+          type: integer
+          description: 例会ID
+        title:
+          type: string
+          description: 例会标题
+        content:
+          type: string
+          description: 例会内容
+        meetingType:
+          type: string
+          enum: [REGULAR, EMERGENCY, PLANNING, REVIEW, TRAINING]
+          description: 例会类型
+        status:
+          type: string
+          enum: [SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED, POSTPONED]
+          description: 例会状态
+        meetingTime:
+          type: string
+          format: date-time
+          description: 例会日期
+        location:
+          type: string
+          description: 例会地点
+        attendees:
+          type: array
+          items:
+            type: string
+          description: 参会人员
+        meetingNotes:
+          type: string
+          description: 会议纪要
+        absentees:
+          type: array
+          items:
+            type: string
+          description: 缺席人员
+        conclusion:
+          type: string
+          description: 会议结论
+        actionItems:
+          type: string
+          description: 行动项
+        tags:
+          type: string
+          description: 标签
+        createdBy:
+          type: string
+          description: 创建人
+        displayOrder:
+          type: integer
+          description: 显示顺序
+        createdAt:
+          type: string
+          format: date-time
+          description: 创建时间
+        updatedAt:
+          type: string
+          format: date-time
+          description: 更新时间
+
+    FileUploadDto:
+      type: object
+      required:
+        - fileName
+        - filePath
+        - fileType
+        - originalName
+      properties:
+        id:
+          type: integer
+          description: 文件ID
+        fileName:
+          type: string
+          description: 文件名
+        originalName:
+          type: string
+          description: 原始文件名
+        fileSize:
+          type: integer
+          format: int64
+          description: 文件大小
+        fileType:
+          type: string
+          description: 文件类型
+        category:
+          type: string
+          description: 分类
+        description:
+          type: string
+          description: 描述
+        filePath:
+          type: string
+          description: 文件路径
+        uploadedBy:
+          type: string
+          description: 上传者
+        downloadCount:
+          type: integer
+          description: 下载次数
+        uploadedAt:
+          type: string
+          format: date-time
+          description: 上传时间
+        downloadUrl:
+          type: string
+          description: 下载链接
+
+    PageMemberDto:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberDto'
+        pageable:
+          $ref: '#/components/schemas/Pageable'
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        size:
+          type: integer
+        number:
+          type: integer
+        sort:
+          $ref: '#/components/schemas/Sort'
+        first:
+          type: boolean
+        last:
+          type: boolean
+        numberOfElements:
+          type: integer
+        empty:
+          type: boolean
+
+    PageProjectDto:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectDto'
+        pageable:
+          $ref: '#/components/schemas/Pageable'
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        size:
+          type: integer
+        number:
+          type: integer
+        sort:
+          $ref: '#/components/schemas/Sort'
+        first:
+          type: boolean
+        last:
+          type: boolean
+        numberOfElements:
+          type: integer
+        empty:
+          type: boolean
+
+    PagePostDto:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/PostDto'
+        pageable:
+          $ref: '#/components/schemas/Pageable'
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        size:
+          type: integer
+        number:
+          type: integer
+        sort:
+          $ref: '#/components/schemas/Sort'
+        first:
+          type: boolean
+        last:
+          type: boolean
+        numberOfElements:
+          type: integer
+        empty:
+          type: boolean
+
+    PageMeetingDto:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/MeetingDto'
+        pageable:
+          $ref: '#/components/schemas/Pageable'
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        size:
+          type: integer
+        number:
+          type: integer
+        sort:
+          $ref: '#/components/schemas/Sort'
+        first:
+          type: boolean
+        last:
+          type: boolean
+        numberOfElements:
+          type: integer
+        empty:
+          type: boolean
+
+    PageFileUploadDto:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileUploadDto'
+        pageable:
+          $ref: '#/components/schemas/Pageable'
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        size:
+          type: integer
+        number:
+          type: integer
+        sort:
+          $ref: '#/components/schemas/Sort'
+        first:
+          type: boolean
+        last:
+          type: boolean
+        numberOfElements:
+          type: integer
+        empty:
+          type: boolean
+
+    Pageable:
+      type: object
+      properties:
+        pageNumber:
+          type: integer
+        pageSize:
+          type: integer
+        sort:
+          $ref: '#/components/schemas/Sort'
+        offset:
+          type: integer
+        paged:
+          type: boolean
+        unpaged:
+          type: boolean
+
+    Sort:
+      type: object
+      properties:
+        sorted:
+          type: boolean
+        unsorted:
+          type: boolean
+        empty:
+          type: boolean
+
+    ResultFileUploadDto:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: 状态码
+        message:
+          type: string
+          description: 消息
+        data:
+          $ref: '#/components/schemas/FileUploadDto'
+          description: 数据
+
+    ResultMapStringObject:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: 状态码
+        message:
+          type: string
+          description: 消息
+        data:
+          type: object
+          additionalProperties:
+            type: object
+          description: 数据
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: 错误码
+        message:
+          type: string
+          description: 错误信息
+        data:
+          type: object
+          nullable: true
+          description: 数据
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: 页码（从0开始）
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+    SizeParam:
+      name: size
+      in: query
+      description: 每页大小
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+    SizeParam10:
+      name: size
+      in: query
+      description: 每页大小
+      schema:
+        type: integer
+        default: 10
+        minimum: 1
+    SortByCreatedAtParam:
+      name: sortBy
+      in: query
+      description: 排序字段
+      schema:
+        type: string
+        default: createdAt
+    SortByUploadedAtParam:
+      name: sortBy
+      in: query
+      description: 排序字段
+      schema:
+        type: string
+        default: uploadedAt
+    SortDirectionParam:
+      name: sortDirection
+      in: query
+      description: 排序方向
+      schema:
+        type: string
+        default: DESC
+        enum: [ASC, DESC]
+    StartDateParam:
+      name: startDate
+      in: query
+      description: 开始日期（yyyy-MM-dd）
+      required: false
+      schema:
+        type: string
+        format: date
+    EndDateParam:
+      name: endDate
+      in: query
+      description: 结束日期（yyyy-MM-dd）
+      required: false
+      schema:
+        type: string
+        format: date
+
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: JSESSIONID
+      description: Session认证
+
+security:
+  - sessionAuth: []

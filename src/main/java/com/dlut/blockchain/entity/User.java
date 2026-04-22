@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.springframework.context.annotation.Primary;
+import org.springframework.data.annotation.Id;
 
 import java.time.LocalDateTime;
 
@@ -21,6 +23,11 @@ import java.time.LocalDateTime;
     @Index(name = "idx_status", columnList = "status")
 })
 public class User extends BaseEntity {
+
+    //主键id
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @NotBlank(message = "用户名不能为空")
     @Size(min = 3, max = 50, message = "用户名长度必须在3-50位之间")

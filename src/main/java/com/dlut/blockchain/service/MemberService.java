@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -211,25 +212,63 @@ public class MemberService {
     /**
      * DTO转换为实体
      */
+
     private Member convertToEntity(MemberDto dto) {
         Member member = new Member();
-        member.setStudentId(dto.getStudentId());
-        member.setName(dto.getName());
-        member.setGender(dto.getGender());
-        member.setGrade(String.valueOf(dto.getGrade()));
-        member.setMajor(dto.getMajor());
-        member.setRole(dto.getRole());
-        member.setEmail(dto.getEmail());
-        member.setPhone(dto.getPhone());
-        member.setResearchDirection(dto.getResearchDirection());
-        member.setBio(dto.getBio());
-        member.setAvatarUrl(dto.getAvatarUrl());
-        member.setStatus(dto.getStatus());
-        member.setFeatured(dto.getFeatured());
-        member.setDisplayOrder(dto.getDisplayOrder());
-        member.setGithubUrl(dto.getGithubUrl());
-        member.setLinkedinUrl(dto.getLinkedinUrl());
-        member.setPersonalWebsite(dto.getPersonalWebsite());
+
+        // 1. 学号：null → 兜底默认值"2024101"，非null则保留原值（优化原三目写法）
+        member.setStudentId(String.valueOf(Optional.ofNullable(dto.getStudentId())));
+
+        // 2. 姓名：null → 空字符串（核心字段也可兜底"未知"，按业务调整）
+        member.setName(Optional.ofNullable(dto.getName()).orElse(""));
+
+        // 3. 性别：null → 空字符串（也可兜底"未知"）
+        member.setGender(Optional.ofNullable(dto.getGender()).orElse(Member.Gender.OTHER));
+
+        // 4. 年级：先判空数字类型的grade，再转字符串（避免grade=null时调用toString()报错）
+        member.setGrade(Optional.ofNullable(dto.getGrade())
+                .map(String::valueOf) // 非null则转字符串
+                .orElse("2024")); // null则兜底空串
+
+        // 5. 专业：null → 空字符串
+        member.setMajor(Optional.ofNullable(dto.getMajor()).orElse(""));
+
+        // 6. 角色：null → 兜底"普通成员"（按业务默认角色调整）
+        member.setRole(Optional.ofNullable(dto.getRole()).orElse(Member.MemberRole.MEMBER));
+
+        // 7. 邮箱：null → 空字符串
+        member.setEmail(Optional.ofNullable(dto.getEmail()).orElse(""));
+
+        // 8. 手机号：null → 空字符串
+        member.setPhone(Optional.ofNullable(dto.getPhone()).orElse(""));
+
+        // 9. 研究方向：null → 空字符串
+        member.setResearchDirection(Optional.ofNullable(dto.getResearchDirection()).orElse(""));
+
+        // 10. 个人简介：null → 空字符串
+        member.setBio(Optional.ofNullable(dto.getBio()).orElse(""));
+
+        // 11. 头像地址：null → 空字符串（也可兜底默认头像URL，如"/default-avatar.png"）
+        member.setAvatarUrl(Optional.ofNullable(dto.getAvatarUrl()).orElse(""));
+
+        // 12. 状态：null → 兜底"正常"（按业务状态枚举调整，如"DRAFT"/"ACTIVE"）
+        member.setStatus(Optional.ofNullable(dto.getStatus()).orElse(Member.MemberStatus.ACTIVE));
+
+        // 13. 是否精选：null → 兜底false（布尔类型不能为null）
+        member.setFeatured(Optional.ofNullable(dto.getFeatured()).orElse(false));
+
+        // 14. 展示顺序：null → 兜底0（数字类型默认排序值）
+        member.setDisplayOrder(Optional.ofNullable(dto.getDisplayOrder()).orElse(0));
+
+        // 15. Github地址：null → 空字符串
+        member.setGithubUrl(Optional.ofNullable(dto.getGithubUrl()).orElse(""));
+
+        // 16. Linkedin地址：null → 空字符串
+        member.setLinkedinUrl(Optional.ofNullable(dto.getLinkedinUrl()).orElse(""));
+
+        // 17. 个人网站：null → 空字符串
+        member.setPersonalWebsite(Optional.ofNullable(dto.getPersonalWebsite()).orElse(""));
+
         return member;
     }
 

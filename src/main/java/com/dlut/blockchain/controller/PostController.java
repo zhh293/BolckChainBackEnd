@@ -7,6 +7,7 @@ import com.dlut.blockchain.service.PostService;
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -139,8 +141,28 @@ public class PostController {
     @PostMapping
     // @PreAuthorize("hasAnyRole('USER', 'ADMIN')") // 移除权限注解 - 隐藏入口访问
     @Operation(summary = "创建文章", description = "创建新的博客文章（隐藏入口访问）")
-    public ResponseEntity<PostDto> createPost(@RequestBody PostDto postDto, HttpSession session) {
+    public ResponseEntity<PostDto> createPost(@RequestBody PostDto postDto, HttpServletRequest request) {
         log.info("创建文章请求: {}", postDto.getTitle());
+        // 1. 关键：手动获取 Session（false = 不存在则返回 null，不新建）
+        HttpSession session = request.getSession(false);
+
+        // 2. 补充排查日志：打印浏览器携带的 Cookie（看是否有 JSESSIONID）
+        String requestCookie = request.getHeader("Cookie");
+        log.info("创建文章请求 - 浏览器携带的Cookie: {}", requestCookie);
+
+        // 3. 校验 Session 是否有效（核心：必须是登录后的 Session）
+        if (session == null) {
+            log.error("创建文章失败：未找到有效 Session，浏览器未携带 JSESSIONID 或 Session 已失效");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null); // 返回未授权
+        }
+
+        // 4. 校验 Session 中的用户信息（登录时存入的 user）
+        Object loginUser = session.getAttribute("user");
+        if (loginUser == null) {
+            log.error("创建文章失败：Session 有效，但未登录（user 不存在），SessionID: {}", session.getId());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+
         PostDto createdPost = postService.createPost(postDto,session);
         return ResponseEntity.ok(createdPost);
     }
@@ -154,9 +176,10 @@ public class PostController {
     @Operation(summary = "更新文章", description = "更新博客文章（隐藏入口访问）")
     public ResponseEntity<PostDto> updatePost(
             @PathVariable Long id,
-            @Valid @RequestBody PostDto postDto) {
+            @Valid @RequestBody PostDto postDto,
+            HttpSession session) {
         log.info("更新文章请求: {}", id);
-        PostDto updatedPost = postService.updatePost(id, postDto);
+        PostDto updatedPost = postService.updatePost(id, postDto,session);
         return ResponseEntity.ok(updatedPost);
     }
 
@@ -166,9 +189,9 @@ public class PostController {
     @DeleteMapping("/{id}")
     // @PreAuthorize("hasAnyRole('USER', 'ADMIN')") // 移除权限注解 - 隐藏入口访问
     @Operation(summary = "删除文章", description = "删除博客文章（隐藏入口访问）")
-    public ResponseEntity<Void> deletePost(@PathVariable Long id) {
+    public ResponseEntity<Void> deletePost(@PathVariable Long id, HttpSession session) {
         log.info("删除文章请求: {}", id);
-        postService.deletePost(id);
+        postService.deletePost(id,session);
         return ResponseEntity.ok().build();
     }
 

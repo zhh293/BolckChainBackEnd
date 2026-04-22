@@ -40,8 +40,8 @@ public class PostDto {
     @Size(max = 500, message = "标签长度不能超过500个字符")
     private String tags;
     
-    private String authorName;
-    private String authorAvatar;
+    private String author;
+//    private String authorAvatar;
     private Integer viewCount;
     private Integer likeCount;
     private Integer commentCount;

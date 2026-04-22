@@ -20,9 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -144,8 +142,8 @@ public class PostService {
     @Transactional
 //    @CacheEvict(value = "posts", allEntries = true)
     public PostDto createPost(PostDto postDto, HttpSession session) {
-        User author = getCurrentUser();
-        String adminUsername = (String)session.getAttribute("admin_username");
+        User author = (User) session.getAttribute("user");
+        log.info("用户是空{}", author);
         Post post = convertToEntity(postDto);
         post.setAuthorId(author.getId());
         post.setViewCount(0);
@@ -155,6 +153,8 @@ public class PostService {
         if (post.getStatus() == Post.PostStatus.PUBLISHED) {
             post.setPublishedAt(LocalDateTime.now());
         }
+        log.debug("文章ID: {}", post.getId());
+        log.debug("传入的文章ID: {}", postDto.getId());
         
         Post savedPost = postRepository.save(post);
         log.info("创建文章成功: {} - {}", savedPost.getId(), savedPost.getTitle());
@@ -167,12 +167,12 @@ public class PostService {
     @Timed(value = "service.posts.update", description = "Time taken to update a post")
     @Transactional
 //    @CacheEvict(value = "posts", allEntries = true)
-    public PostDto updatePost(Long id, PostDto postDto) {
+    public PostDto updatePost(Long id, PostDto postDto,HttpSession session) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("文章不存在"));
         
         // 检查权限
-        User currentUser = getCurrentUser();
+        User currentUser = (User) session.getAttribute("user");
         if (!post.getAuthorId().equals(currentUser.getId()) && 
             currentUser.getRole() != User.Role.ADMIN) {
             throw new RuntimeException("没有权限更新此文章");
@@ -194,12 +194,12 @@ public class PostService {
      */
     @Transactional
 //    @CacheEvict(value = "posts", allEntries = true)
-    public void deletePost(Long id) {
+    public void deletePost(Long id,HttpSession session) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("文章不存在"));
         
         // 检查权限
-        User currentUser = getCurrentUser();
+        User currentUser = (User) session.getAttribute("user");
         if (!post.getAuthorId().equals(currentUser.getId()) && 
             currentUser.getRole() != User.Role.ADMIN) {
             throw new RuntimeException("没有权限删除此文章");
@@ -378,8 +378,7 @@ public class PostService {
         User author = userRepository.findById(post.getAuthorId())
                 .orElse(null);
         if (author != null) {
-            dto.setAuthorName(author.getFullName() != null ? author.getFullName() : author.getUsername());
-            dto.setAuthorAvatar(author.getAvatarUrl());
+            dto.setAuthor(author.getFullName() != null ? author.getFullName() : author.getUsername());
         }
         
         return dto;
@@ -388,19 +387,54 @@ public class PostService {
     /**
      * DTO转换为实体
      */
+
+// 假设 PostDto 和 Post 的字段类型：
+// - 字符串类：title/content/summary/coverImage/author/status → String
+// - 布尔类：allowComments/featured → Boolean
+// - 集合类：tags → List<String>（可根据实际类型调整）
+
     private Post convertToEntity(PostDto dto) {
         Post post = new Post();
-        post.setTitle(dto.getTitle());
-        post.setContent(dto.getContent());
-        post.setSummary(dto.getSummary());
-        post.setCoverImage(dto.getCoverImage());
-        post.setStatus(dto.getStatus());
-        post.setAllowComments(dto.getAllowComments());
-        post.setFeatured(dto.getFeatured());
-        post.setTags(dto.getTags());
+
+        // 1. 标题：null → 空字符串（也可根据业务设默认值如"无标题"）
+        post.setTitle(Optional.ofNullable(dto.getTitle()).orElse(""));
+
+        // 2. 内容：null → 空字符串
+        post.setContent(Optional.ofNullable(dto.getContent()).orElse(""));
+
+        // 3. 摘要：null → 空字符串
+        post.setSummary(Optional.ofNullable(dto.getSummary()).orElse(""));
+
+        // 4. 封面图：null → 空字符串（无封面场景）
+        post.setCoverImage(Optional.ofNullable(dto.getCoverImage()).orElse(""));
+
+        // 5. 状态：null → 兜底默认值（比如"DRAFT"草稿，根据业务枚举调整）
+        post.setStatus(Optional.ofNullable(dto.getStatus()).orElse(Post.PostStatus.PUBLISHED));
+
+        // 6. 是否允许评论：null → 默认true（也可设false，按业务来）
+        post.setAllowComments(Optional.ofNullable(dto.getAllowComments()).orElse(true));
+
+        // 7. 是否精选：null → 默认false
+        post.setFeatured(Optional.ofNullable(dto.getFeatured()).orElse(false));
+
+        // 8. 标签：null → 空集合（避免后续遍历报NullPointerException）
+        post.setTags(Optional.ofNullable(dto.getTags()).orElse(Collections.emptyList().toString()));
+
+        // 9. 阅读数：固定初始值0，无需判空
         post.setViewCount(0);
+
+        // 10. 点赞数：固定初始值0，无需判空
         post.setLikeCount(0);
+
+        // 11. 评论数：固定初始值0，无需判空
         post.setCommentCount(0);
+
+        // 12. 作者：核心字段！null/空串 → 兜底"匿名"（解决之前的非空校验报错）
+        post.setAuthor(Optional.ofNullable(dto.getAuthor())
+                .map(String::trim) // 先去首尾空格
+                .filter(author -> !author.isEmpty()) // 过滤空串
+                .orElse("匿名")); // 最终兜底
+
         return post;
     }
 

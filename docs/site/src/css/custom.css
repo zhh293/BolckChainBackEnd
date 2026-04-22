@@ -1,0 +1,223 @@
+:root {
+  --ifm-color-primary: #2e8555;
+  --ifm-color-primary-dark: #29784c;
+  --ifm-color-primary-darker: #277148;
+  --ifm-color-primary-darkest: #205d3b;
+  --ifm-color-primary-light: #33925d;
+  --ifm-color-primary-lighter: #359962;
+  --ifm-color-primary-lightest: #3cad6e;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #25c2a0;
+  --ifm-color-primary-dark: #21af90;
+  --ifm-color-primary-darker: #1fa588;
+  --ifm-color-primary-darkest: #1a8870;
+  --ifm-color-primary-light: #29d5b0;
+  --ifm-color-primary-lighter: #32d8b3;
+  --ifm-color-primary-lightest: #4fddbf;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+.hero__title {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+.hero__subtitle {
+  font-size: 1.5rem;
+  color: var(--ifm-color-secondary-darkest);
+  margin-bottom: 2rem;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+.feature__card {
+  padding: 2rem;
+  border-radius: 12px;
+  background: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-border-color);
+  transition: all 0.3s ease;
+}
+
+.feature__card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.feature__icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.feature__title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.feature__description {
+  color: var(--ifm-color-secondary);
+  line-height: 1.6;
+}
+
+.api-endpoint {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  border-radius: 8px;
+  background: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-border-color);
+}
+
+.api-method {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-right: 0.75rem;
+}
+
+.api-method.get {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.api-method.post {
+  background: #e8f5e9;
+  color: #388e3c;
+}
+
+.api-method.put {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.api-method.delete {
+  background: #ffebee;
+  color: #d32f2f;
+}
+
+.api-method.patch {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.api-url {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.875rem;
+  color: var(--ifm-color-content);
+}
+
+.code-block {
+  position: relative;
+  margin: 1.5rem 0;
+}
+
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: var(--ifm-color-emphasis-100);
+  border-radius: 8px 8px 0 0;
+  font-size: 0.875rem;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.copy-button {
+  background: transparent;
+  border: none;
+  color: var(--ifm-color-emphasis-700);
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.copy-button:hover {
+  background: var(--ifm-color-emphasis-200);
+}
+
+.table-container {
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+
+.api-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.api-table th,
+.api-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--ifm-border-color);
+}
+
+.api-table th {
+  background: var(--ifm-background-surface-color);
+  font-weight: 600;
+  color: var(--ifm-color-emphasis-900);
+}
+
+.api-table tr:hover {
+  background: var(--ifm-color-emphasis-50);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge.required {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.badge.optional {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.badge.success {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.badge.warning {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+
+.badge.error {
+  background: #ffebee;
+  color: #c62828;
+}
+
+@media (max-width: 768px) {
+  .hero__title {
+    font-size: 2rem;
+  }
+
+  .hero__subtitle {
+    font-size: 1.25rem;
+  }
+
+  .features {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,173 @@
+{
+  "info": {
+    "name": "Blockchain Website Backend API",
+    "description": "区块链实验室后端接口集合（含会话态示例）",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"123456\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Validate Session",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Cookie", "value": "JSESSIONID={{jsessionid}}" }
+            ],
+            "url": "{{baseUrl}}/auth/validate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Members",
+      "item": [
+        {
+          "name": "Get Members",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/members?page=0&size=20&sortBy=id&sortDirection=DESC"
+          }
+        },
+        {
+          "name": "Create Member",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Cookie", "value": "JSESSIONID={{jsessionid}}" }
+            ],
+            "url": "{{baseUrl}}/members",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"2026123456\",\n  \"name\": \"王同学\",\n  \"gender\": \"MALE\",\n  \"grade\": \"2026\",\n  \"major\": \"软件工程\",\n  \"role\": \"MEMBER\",\n  \"email\": \"wang@example.com\",\n  \"phone\": \"13800138000\",\n  \"status\": \"ACTIVE\",\n  \"featured\": false\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "Get Projects",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/projects?page=0&pageSize=10&sortBy=updateTime&sortDirection=DESC"
+          }
+        },
+        {
+          "name": "Create Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Cookie", "value": "JSESSIONID={{jsessionid}}" }
+            ],
+            "url": "{{baseUrl}}/projects",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"联盟链课题\",\n  \"description\": \"企业联盟链在供应链金融场景实践\",\n  \"status\": \"IN_PROGRESS\",\n  \"category\": \"BLOCKCHAIN\",\n  \"isPublic\": true,\n  \"featured\": true,\n  \"budget\": 500000,\n  \"progress\": 35\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Posts",
+      "item": [
+        {
+          "name": "Search Posts",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/posts/search?keyword=区块链&page=0&size=10"
+          }
+        },
+        {
+          "name": "Create Post",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Cookie", "value": "JSESSIONID={{jsessionid}}" }
+            ],
+            "url": "{{baseUrl}}/posts",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"零知识证明在身份认证中的应用\",\n  \"content\": \"本文介绍 ZKP 的基本原理与实现路径。\",\n  \"summary\": \"ZKP 技术综述\",\n  \"status\": \"DRAFT\",\n  \"featured\": false,\n  \"allowComments\": true,\n  \"tags\": \"ZKP,Identity\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Meetings",
+      "item": [
+        {
+          "name": "Get Meetings",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/meetings?page=0&size=10&sortBy=meetingTime"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Files",
+      "item": [
+        {
+          "name": "Search Files",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/files/search?keyword=周报&page=0&size=10"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stats",
+      "item": [
+        {
+          "name": "Overview",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/stats/overview"
+          }
+        },
+        {
+          "name": "Visit Trend",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/visit-stats/trend?days=30"
+          }
+        },
+        {
+          "name": "Performance Metrics",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/performance/metrics/all"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8082/api" },
+    { "key": "jsessionid", "value": "" }
+  ]
+}
