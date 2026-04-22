@@ -217,7 +217,7 @@ public class MemberService {
         Member member = new Member();
 
         // 1. 学号：null → 兜底默认值"2024101"，非null则保留原值（优化原三目写法）
-        member.setStudentId(String.valueOf(Optional.ofNullable(dto.getStudentId())));
+        member.setStudentId(String.valueOf(Optional.ofNullable(dto.getStudentId()).orElse("不填学号的要干啥")));
 
         // 2. 姓名：null → 空字符串（核心字段也可兜底"未知"，按业务调整）
         member.setName(Optional.ofNullable(dto.getName()).orElse(""));
